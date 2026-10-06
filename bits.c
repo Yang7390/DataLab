@@ -213,13 +213,13 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int swapNibblePairs(int x) {
-  int mask=0x0F|(0x0F<<8);
-  mask=mask|(mask<<16):
-  int low=x&mask;
-  int high=x&~mask;
-  low=low<<4;
-  high=(high>>4)&mask;
-  return high|low;
+  int f0 = 0x0F;
+  int mask_low = (f0 << 24) | (f0 << 16) | (f0 << 8) | f0;
+  int f1 = 0xF0;
+  int mask_high = (f1 << 24) | (f1 << 16) | (f1 << 8) | f1;int low4 = x & mask_low;
+  int high4 = x & mask_high;low4 = low4 << 4;
+  high4 = (high4 >> 4) & mask_low;
+  return low4 | high4;
 }
 
 // P7
