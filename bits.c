@@ -200,7 +200,9 @@ int copyByteWithin(int x, int src, int dst) {
  *   Rating: 4
  */
 int logicalShift(int x, int n) {
-  return 5;
+   int arith=x>>n;
+   int mask=~(~0<<(32-n))
+   return arith&mask;
 }
 
 // P6
