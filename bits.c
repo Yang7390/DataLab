@@ -146,7 +146,7 @@ NOTES:
  *   Rating: 1
  */
 int signMask(void) {
-  return 1<<31;
+   return 1<<31;
 }
 
 // P2
@@ -158,7 +158,7 @@ int signMask(void) {
  *   Rating: 2
  */
 int bitXor(int x, int y) {
-	return ~(~x&~y)&~(x&y);
+   return ~(~x&~y)&~(x&y);
 }
 
 // P3
@@ -170,7 +170,7 @@ int bitXor(int x, int y) {
  *   Rating: 3
  */
 int negativePart(int x){
-  return (x>>31)&(~x+1);
+   return (x>>31)&(~x+1);
 }
 
 
@@ -185,7 +185,9 @@ int negativePart(int x){
  *   Rating: 4
  */
 int copyByteWithin(int x, int src, int dst) {
-  return 4;
+   int srcByte=(x>>(src<<3))&0xFF;
+   int mask=~(0xFF<<(drc<<3));
+   return (x&mask)|(srcByte<<(drc<<3));
 }
 
 // P5
