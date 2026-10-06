@@ -186,8 +186,8 @@ int negativePart(int x){
  */
 int copyByteWithin(int x, int src, int dst) {
    int srcByte=(x>>(src<<3))&0xFF;
-   int mask=~(0xFF<<(drc<<3));
-   return (x&mask)|(srcByte<<(drc<<3));
+   int mask=~(0xFF<<(dst<<3));
+   return (x&mask)|(srcByte<<(dst<<3));
 }
 
 // P5
