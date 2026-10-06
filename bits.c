@@ -213,7 +213,11 @@ int logicalShift(int x, int n) {
  *   Rating: 4
  */
 int swapNibblePairs(int x) {
-  return 6;
+  int low=0x0F0F0F0F&x;
+  int high=0xF0F0F0F0&x;
+  low=low<<4;
+  high=(high>>4)&0x0F0F0F0F;
+  return high|low;
 }
 
 // P7
