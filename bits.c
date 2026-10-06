@@ -265,13 +265,11 @@ int oddParity(int x) {
  *   Rating: 5
  */
 int rotateRightBits(int x, int n) {
-    int rotateRightBits(int x, int n) {
-    int shift = n & 31;
-    int low_bits = x & (~((~0) << shift));
-    int partA = low_bits << (32 + ~shift + 1);
-    int mask = ~((1 << 31) >> (shift + ~1) << 1);
-    int partB = (x >> shift) & mask;
-    return partA | partB;
+   int shift = n & 31;
+   int low = x & (~((~0) << shift));
+   int high = (x >> shift) & ~(((1 << 31) >> shift) << 1);
+   int rotatedLow = low << (32 + ~shift);
+   return high | rotatedLow;
 }
 
 }
