@@ -201,7 +201,7 @@ int copyByteWithin(int x, int src, int dst) {
  */
 int logicalShift(int x, int n) {
    int arith=x>>n;
-   int mask=~(~0<<(32-n))
+   int mask=~(~0<<(32-n));
    return arith&mask;
 }
 
