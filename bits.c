@@ -232,7 +232,9 @@ int swapNibblePairs(int x) {
  *   Rating: 4
  */
 int secondLowestZeroBit(int x) {
-  return 7;
+   int y=~x;
+   int y_drop1=y&(y+~0);
+   return y_drop1&(~y_drop1+1);
 }
 
 // P8
