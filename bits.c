@@ -268,10 +268,8 @@ int rotateRightBits(int x, int n) {
    int shift = n & 31;
    int low = x & (~((~0) << shift));
    int high = (x >> shift) & ~(((1 << 31) >> shift) << 1);
-   int rotatedLow = low << (32 + ~shift);
+   int rotatedLow = low <<((33 + ~shift)&31);
    return high | rotatedLow;
-}
-
 }
 
 // P10
