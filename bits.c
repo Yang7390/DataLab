@@ -348,7 +348,16 @@ int isBetweenEitherOrder(int x, int a, int b) {
  *   Rating: 7
  */
 int mul5Sat(int x) {
-  return 13;
+    int x4 = x << 2;
+    int prod = x4 + x;
+    int sx = x >> 31;
+    int sp = prod >> 31;
+    int over = sx ^ sp;
+    int maxVal = ~(1 << 31);
+    int minVal = 1 << 31;
+    int sat = (over & ((~sx & maxVal) | (sx & minVal)));
+    int res = (~over & prod) | sat;
+    return res;
 }
 
 // P14
