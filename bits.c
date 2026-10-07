@@ -445,20 +445,27 @@ unsigned floatScaleThreeHalves(unsigned uf) {
         E = exp - 127;
     }
 
+    // 求原尾数的最高位位置
+    int k_old = 0;
+    unsigned tmp = m;
+    while (tmp >>= 1) k_old++;
+
     unsigned prod = m + (m << 1);
 
+    // 求乘积的最高位位置
     int k = 0;
-    unsigned temp = prod;
-    while (temp >>= 1) k++;
+    tmp = prod;
+    while (tmp >>= 1) k++;
 
-    int E_new = E + k - 24;
+    // 新指数：原指数 + 最高位偏移 - 1（除以2）
+    int E_new = E + (k - k_old) - 1;
     unsigned frac_full = prod ^ (1 << k);
-    int L = k - 23;
+
+    int shift = k - 23;
     unsigned frac_keep;
     int carry = 0;
 
-    if (L > 0) {
-        unsigned shift = L;
+    if (shift > 0) {
         frac_keep = frac_full >> shift;
         unsigned round_part = frac_full & ((1 << shift) - 1);
         unsigned half = 1 << (shift - 1);
@@ -468,7 +475,7 @@ unsigned floatScaleThreeHalves(unsigned uf) {
             if (frac_keep & 1) carry = 1;
         }
     } else {
-        frac_keep = frac_full << (-L);
+        frac_keep = frac_full << (-shift);
     }
 
     frac_keep += carry;
@@ -483,11 +490,11 @@ unsigned floatScaleThreeHalves(unsigned uf) {
     }
 
     if (new_exp <= 0) {
-        int shift = 1 - new_exp;
+        int right_shift = 1 - new_exp;
         unsigned full_m = (1 << 23) | frac_keep;
-        unsigned round_part = full_m & ((1 << shift) - 1);
-        unsigned half = 1 << (shift - 1);
-        frac_keep = full_m >> shift;
+        unsigned round_part = full_m & ((1 << right_shift) - 1);
+        unsigned half = 1 << (right_shift - 1);
+        frac_keep = full_m >> right_shift;
         carry = 0;
         if (round_part > half) {
             carry = 1;
@@ -501,7 +508,6 @@ unsigned floatScaleThreeHalves(unsigned uf) {
             frac_keep >>= 1;
         }
     }
-
     return (s << 31) | ((unsigned)new_exp << 23) | (frac_keep & 0x7FFFFF);
 }
 
