@@ -431,84 +431,49 @@ unsigned floatScaleThreeHalves(unsigned uf) {
     unsigned s = uf >> 31;
     unsigned exp = (uf >> 23) & 0xFF;
     unsigned frac = uf & 0x7FFFFF;
-    unsigned m;
-    int E;
 
     if (exp == 0xFF) return uf;
     if (exp == 0 && frac == 0) return uf;
 
+    unsigned m;
     if (exp == 0) {
         m = frac;
-        E = -126;
     } else {
         m = (1 << 23) | frac;
-        E = exp - 127;
     }
 
-    // 求原尾数的最高位位置
-    int k_old = 0;
-    unsigned tmp = m;
-    while (tmp >>= 1) k_old++;
+    unsigned prod = m * 3;
+    unsigned m_half = prod >> 1;
+    int round_bit = prod & 1;
+    if (round_bit && (m_half & 1)) {
+        m_half++;
+    }
 
-    unsigned prod = m + (m << 1);
+    unsigned new_exp;
+    unsigned new_frac;
 
-    // 求乘积的最高位位置
-    int k = 0;
-    tmp = prod;
-    while (tmp >>= 1) k++;
-
-    // 新指数：原指数 + 最高位偏移 - 1（除以2）
-    int E_new = E + (k - k_old) - 1;
-    unsigned frac_full = prod ^ (1 << k);
-
-    int shift = k - 23;
-    unsigned frac_keep;
-    int carry = 0;
-
-    if (shift > 0) {
-        frac_keep = frac_full >> shift;
-        unsigned round_part = frac_full & ((1 << shift) - 1);
-        unsigned half = 1 << (shift - 1);
-        if (round_part > half) {
-            carry = 1;
-        } else if (round_part == half) {
-            if (frac_keep & 1) carry = 1;
+    if (exp == 0) {
+        if (m_half >= (1 << 23)) {
+            new_exp = 1;
+            new_frac = m_half & 0x7FFFFF;
+        } else {
+            new_exp = 0;
+            new_frac = m_half;
         }
     } else {
-        frac_keep = frac_full << (-shift);
-    }
-
-    frac_keep += carry;
-    if (frac_keep >= (1 << 23)) {
-        E_new++;
-        frac_keep >>= 1;
-    }
-
-    int new_exp = E_new + 127;
-    if (new_exp >= 255) {
-        return (s << 31) | 0x7F800000;
-    }
-
-    if (new_exp <= 0) {
-        int right_shift = 1 - new_exp;
-        unsigned full_m = (1 << 23) | frac_keep;
-        unsigned round_part = full_m & ((1 << right_shift) - 1);
-        unsigned half = 1 << (right_shift - 1);
-        frac_keep = full_m >> right_shift;
-        carry = 0;
-        if (round_part > half) {
-            carry = 1;
-        } else if (round_part == half) {
-            if (frac_keep & 1) carry = 1;
+        if (m_half >= (1 << 24)) {
+            new_exp = exp + 1;
+            new_frac = (m_half >> 1) & 0x7FFFFF;
+        } else {
+            new_exp = exp;
+            new_frac = m_half & 0x7FFFFF;
         }
-        frac_keep += carry;
-        new_exp = 0;
-        if (frac_keep >= (1 << 23)) {
-            new_exp = 1;
-            frac_keep >>= 1;
+        if (new_exp >= 255) {
+            return (s << 31) | 0x7F800000;
         }
     }
-    return (s << 31) | ((unsigned)new_exp << 23) | (frac_keep & 0x7FFFFF);
+
+    return (s << 31) | (new_exp << 23) | new_frac;
 }
 
 // P16
