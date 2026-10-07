@@ -348,16 +348,18 @@ int isBetweenEitherOrder(int x, int a, int b) {
  *   Rating: 7
  */
 int mul5Sat(int x) {
-    int sum = (x << 2) + x;         
-    int over = (sum ^ x) >> 31;      
-    int mini = 1 << 31;             
-    int maxi = ~mini;                
-    int sign = x >> 31;              
-    int sat = (~sign & maxi) | (sign & mini);
-    return (over & sat) | (~over & sum);
+    int t = x << 2;
+    int s = t + x;
+    int sign = x >> 31;
+    
+    int shift_over = ((x >> 29) ^ sign) << 31 >> 31;
+    int add_over = (~(t ^ x) & (s ^ t)) >> 31;
+    int over = shift_over | add_over;
+    
+    int lim = 1 << 31;
+    int sat = (~sign & ~lim) | (sign & lim);
+    return (over & sat) | (~over & s);
 }
-
-
 
 // P14
 /* 
