@@ -385,7 +385,33 @@ int mul5Sat(int x) {
  *   Rating: 7
  */
 int classifyAdd3(int x, int y, int z) {
-  return 14;
+    int sx = x >> 31;
+    int sy = y >> 31;
+    int sz = z >> 31;
+    
+    int s1 = x + y;
+    int ss1 = s1 >> 31;
+    int sum = s1 + z;
+    int ssum = sum >> 31;
+    
+    int over1_pos = ~sx & ~sy & ss1;
+    int over1_neg = sx & sy & ~ss1;
+    int over2_pos = ~ss1 & ~sz & ssum;
+    int over2_neg = ss1 & sz & ~ssum;
+    
+    int not_o1n = ~over1_neg;
+    int not_o2n = ~over2_neg;
+    int pos_two = over1_pos & over2_pos;
+    int pos_one = (over1_pos | over2_pos) & not_o1n & not_o2n;
+    int pos_over = pos_two | pos_one;
+    
+    int not_o1p = ~over1_pos;
+    int not_o2p = ~over2_pos;
+    int neg_two = over1_neg & over2_neg;
+    int neg_one = (over1_neg | over2_neg) & not_o1p & not_o2p;
+    int neg_over = neg_two | neg_one;
+    
+    return (pos_over & 1) | (neg_over & ~0);
 }
 
 // P15
