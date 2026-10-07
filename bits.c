@@ -428,7 +428,81 @@ int classifyAdd3(int x, int y, int z) {
  *   Rating: 7
  */
 unsigned floatScaleThreeHalves(unsigned uf) {
-  return 15;
+    unsigned s = uf >> 31;
+    unsigned exp = (uf >> 23) & 0xFF;
+    unsigned frac = uf & 0x7FFFFF;
+    unsigned m;
+    int E;
+
+    if (exp == 0xFF) return uf;
+    if (exp == 0 && frac == 0) return uf;
+
+    if (exp == 0) {
+        m = frac;
+        E = -126;
+    } else {
+        m = (1 << 23) | frac;
+        E = exp - 127;
+    }
+
+    unsigned prod = m + (m << 1);
+
+    int k = 0;
+    unsigned temp = prod;
+    while (temp >>= 1) k++;
+
+    int E_new = E + k - 24;
+    unsigned frac_full = prod ^ (1 << k);
+    int L = k - 23;
+    unsigned frac_keep;
+    int carry = 0;
+
+    if (L > 0) {
+        unsigned shift = L;
+        frac_keep = frac_full >> shift;
+        unsigned round_part = frac_full & ((1 << shift) - 1);
+        unsigned half = 1 << (shift - 1);
+        if (round_part > half) {
+            carry = 1;
+        } else if (round_part == half) {
+            if (frac_keep & 1) carry = 1;
+        }
+    } else {
+        frac_keep = frac_full << (-L);
+    }
+
+    frac_keep += carry;
+    if (frac_keep >= (1 << 23)) {
+        E_new++;
+        frac_keep >>= 1;
+    }
+
+    int new_exp = E_new + 127;
+    if (new_exp >= 255) {
+        return (s << 31) | 0x7F800000;
+    }
+
+    if (new_exp <= 0) {
+        int shift = 1 - new_exp;
+        unsigned full_m = (1 << 23) | frac_keep;
+        unsigned round_part = full_m & ((1 << shift) - 1);
+        unsigned half = 1 << (shift - 1);
+        frac_keep = full_m >> shift;
+        carry = 0;
+        if (round_part > half) {
+            carry = 1;
+        } else if (round_part == half) {
+            if (frac_keep & 1) carry = 1;
+        }
+        frac_keep += carry;
+        new_exp = 0;
+        if (frac_keep >= (1 << 23)) {
+            new_exp = 1;
+            frac_keep >>= 1;
+        }
+    }
+
+    return (s << 31) | ((unsigned)new_exp << 23) | (frac_keep & 0x7FFFFF);
 }
 
 // P16
