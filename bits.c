@@ -310,7 +310,15 @@ int roundEvenPow2(int x, int n) {
  *   Rating: 5
  */
 int midpointTowardFirst(int x, int y) {
-  return 11;
+  int same=x&y;
+  int diff=x^y;
+  int base=same+(diff>>1);
+  int sub=x+~y+1;
+  int signSub=sub>>31;
+  int xGreater=!signSub;
+  int oddSum=diff&1;
+  int add=oddSum&xGreater;
+  return base+add;
 }
 
 
