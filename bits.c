@@ -331,19 +331,16 @@ int midpointTowardFirst(int x, int y) {
  *   Rating: 7
  */
 int isBetweenEitherOrder(int x, int a, int b) {
-    int sx = x >> 31;
-    int sa = a >> 31;
-    int sb = b >> 31;
-    
-    int x_ge_a = ((sx^sa)&~sx) | (~(sx^sa)&~((x+~a+1)>>31));
-    int b_ge_x = ((sb^sx)&~sb) | (~(sb^sx)&~((b+~x+1)>>31));
-    int case1 = x_ge_a & b_ge_x;
-    
-    int x_ge_b = ((sx^sb)&~sx) | (~(sx^sb)&~((x+~b+1)>>31));
-    int a_ge_x = ((sa^sx)&~sa) | (~(sa^sx)&~((a+~x+1)>>31));
-    int case2 = x_ge_b & a_ge_x;
-    
-    return case1 | case2;
+   int sx = x >> 31;
+   int sa = a >> 31;
+   int sb = b >> 31;
+   int ge = ((sx^sa)&~sx) | (~(sx^sa)&~((x+~a+1)>>31));
+   int le = ((sb^sx)&~sb) | (~(sb^sx)&~((b+~x+1)>>31));
+   int case1 = ge & le;
+   int ge2 = ((sx^sb)&~sx) | (~(sx^sb)&~((x+~b+1)>>31));
+   int le2 = ((sa^sx)&~sa) | (~(sa^sx)&~((a+~x+1)>>31));
+   int case2 = ge2 & le2;
+   return !!(case1 | case2);
 }
 
 // P13
