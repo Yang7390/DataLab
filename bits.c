@@ -337,9 +337,9 @@ int isBetweenEitherOrder(int x, int a, int b) {
     int da = x + ~a + 1;  
     int db = x + ~b + 1;  
     int x_ge_a = ((sx ^ sa) & ~sx) | (~(sx ^ sa) & ~(da >> 31));
-    int b_ge_x = ((sb ^ sx) & ~sb) | (~(sb ^ sx) & (db >> 31));
+    int b_ge_x = ((sb ^ sx) & ~sb) | (~(sb ^ sx) & ~(db >> 31));
     int x_ge_b = ((sx ^ sb) & ~sx) | (~(sx ^ sb) & ~(db >> 31));
-    int a_ge_x = ((sa ^ sx) & ~sa) | (~(sa ^ sx) & (da >> 31));
+    int a_ge_x = ((sa ^ sx) & ~sa) | (~(sa ^ sx) & ~(da >> 31));
     return (x_ge_a & b_ge_x) | (x_ge_b & a_ge_x);
 }
 
