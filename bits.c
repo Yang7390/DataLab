@@ -335,10 +335,11 @@ int isBetweenEitherOrder(int x, int a, int b) {
   int diffB = x + ~b + 1;
   int sA = diffA >> 31;
   int sB = diffB >> 31;
-  int xorSign = sA ^ sB;
+  int signDiff = sA ^ sB;
   int eqA = !(x ^ a);
   int eqB = !(x ^ b);
-  return (xorSign & 1) | eqA | eqB;
+  int res = (signDiff & 1) | eqA | eqB;
+  return res;
 }
 
 // P13
