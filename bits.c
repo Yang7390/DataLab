@@ -331,16 +331,11 @@ int midpointTowardFirst(int x, int y) {
  *   Rating: 7
  */
 int isBetweenEitherOrder(int x, int a, int b) {
-   int sx = x >> 31;
-   int sa = a >> 31;
-   int sb = b >> 31;
-   int ge = ((sx^sa)&~sx) | (~(sx^sa)&~((x+~a+1)>>31));
-   int le = ((sb^sx)&~sb) | (~(sb^sx)&~((b+~x+1)>>31));
-   int case1 = ge & le;
-   int ge2 = ((sx^sb)&~sx) | (~(sx^sb)&~((x+~b+1)>>31));
-   int le2 = ((sa^sx)&~sa) | (~(sa^sx)&~((a+~x+1)>>31));
-   int case2 = ge2 & le2;
-   return !!(case1 | case2);
+  int xa = x + ~a + 1;
+  int xb = x + ~b + 1;
+  int sxa = xa >> 31;
+  int sxb = xb >> 31;
+  return (sxa ^ sxb) | !xa | !xb;
 }
 
 // P13
