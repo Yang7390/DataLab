@@ -313,12 +313,11 @@ int midpointTowardFirst(int x, int y) {
   int same=x&y;
   int diff=x^y;
   int base=same+(diff>>1);
-  int sub=x+~y+1;
-  int signSub=sub>>31;
-  int xGreater=!signSub;
-  int oddSum=diff&1;
-  int add=oddSum&xGreater;
-  return base+add;
+  int odd=diff&1;
+  int sx=x>>31;
+  int sy=y>>31;
+  int x_gt_y=((sx^sy)&~sx)|(~(sx^sy)&~((x+~y+1)>>31));
+  return base+(odd&x_gt_y);
 }
 
 
