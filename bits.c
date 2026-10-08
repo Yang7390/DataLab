@@ -431,80 +431,68 @@ unsigned floatScaleThreeHalves(unsigned uf) {
     unsigned s = uf >> 31;
     unsigned exp = (uf >> 23) & 0xFF;
     unsigned frac = uf & 0x7FFFFF;
+    if (exp == 0xFF) {
+        return uf;
+    }
 
-    if (exp == 0xFF) return uf;
-    if (exp == 0 && frac == 0) return uf;
-    int E;
-    unsigned m;
     if (exp == 0) {
-        E = -126;
-        m = frac;
+        unsigned sig3 = frac + (frac << 1); 
+        unsigned round_bit = sig3 & 1;
+        unsigned sig_half = sig3 >> 1;
+
+        if (round_bit && (sig_half & 1)) {
+            sig_half++;
+        }
+        unsigned sig_new = sig_half;
+
+        unsigned new_exp, new_frac;
+        if (sig_new >= (1 << 23)) {
+            new_exp = 1;
+            new_frac = sig_new - (1 << 23);
+        } else {
+            new_exp = 0;
+            new_frac = sig_new;
+        }
+        return (s << 31) | (new_exp << 23) | new_frac;
     } else {
-        E = exp - 127;
-        m = (1 << 23) | frac;
-    }
-    unsigned prod = m * 3;
-    int k = 0;
-    unsigned tmp = prod;
-    while (tmp >>= 1) {
-        k++;
-    }
+        
+        unsigned sig = ((1 << 23) | frac) << 1;
+        
+        unsigned sig3 = sig + (sig << 1);
+        unsigned sig_half = sig3 >> 1;
 
-    int E_new = E + k - 24;
-    unsigned frac_prod = prod ^ (1 << k);
-
-    unsigned frac_keep;
-    int carry = 0;
-    int exp_new;
-
-    if (E_new >= -126) {
-     
-        int shift = k - 23;
-        frac_keep = frac_prod >> shift;
+        unsigned new_exp;
+        unsigned frac24; 
+        if (sig_half >= (1 << 25)) {
+           
+            new_exp = exp + 1;
+            frac24 = (sig_half >> 1) & ((1 << 24) - 1);
+        } else {
+           
+            new_exp = exp;
+            frac24 = sig_half & ((1 << 24) - 1);
+        }
 
        
-        if (shift > 0) {
-            unsigned round_part = frac_prod & ((1 << shift) - 1);
-            unsigned half = 1 << (shift - 1);
-            if (round_part > half) {
-                carry = 1;
-            } else if (round_part == half) {
-                carry = (frac_keep & 1);
-            }
+        unsigned round_bit = frac24 & 1;
+        unsigned new_frac = frac24 >> 1;
+        if (round_bit && (new_frac & 1)) {
+            new_frac++;
         }
 
-        frac_keep += carry;
-        if (frac_keep >= (1 << 23)) {
-            E_new++;
-            frac_keep = 0;
-        }
-
-        exp_new = E_new + 127;
-        if (exp_new >= 255) {
-            return (s << 31) | 0x7F800000;
-        }
-    } else {
        
-        int shift_right = -(E + 125);
-        frac_keep = prod >> shift_right;
-        unsigned round_part = prod & ((1 << shift_right) - 1);
-        unsigned half = 1 << (shift_right - 1);
-
-        if (round_part > half) {
-            carry = 1;
-        } else if (round_part == half) {
-            carry = (frac_keep & 1);
+        if (new_frac >= (1 << 23)) {
+            new_exp++;
+            new_frac = 0;
         }
 
-        frac_keep += carry;
-        exp_new = 0;
-        if (frac_keep >= (1 << 23)) {
-            exp_new = 1;
-            frac_keep = 0;
+      
+        if (new_exp >= 0xFF) {
+            return (s << 31) | (0xFF << 23);
         }
+
+        return (s << 31) | (new_exp << 23) | new_frac;
     }
-
-    return (s << 31) | ((unsigned)exp_new << 23) | (frac_keep & 0x7FFFFF);
 }
 
 
