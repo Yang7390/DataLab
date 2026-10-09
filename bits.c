@@ -580,9 +580,35 @@ unsigned floatRoundEven(unsigned uf) {
  *   Rating: 10
  */
 unsigned float_i2f(int x) {
-  return 17;
+    unsigned sign = 0;
+    unsigned abs_x = x;
+    unsigned exp, frac;
+    int shift;
+    unsigned round_part;
+    if (x == 0) {
+        return 0;
+    }
+    if (x < 0) {
+        sign = 1;
+        abs_x = 0U - x;
+    }
+    shift = 31;
+    while (!(abs_x & (1U << shift))) {
+        shift--;
+    }
+    exp = shift + 127; 
+    abs_x = abs_x << (31 - shift);
+    frac = (abs_x >> 8) & 0x7FFFFF;
+    round_part = abs_x & 0xFF;
+    if (round_part > 0x80 || (round_part == 0x80 && (frac & 1))) {
+        frac += 1;
+        if (frac >> 23) {
+            exp += 1;
+            frac &= 0x7FFFFF;
+        }
+    }
+    return (sign << 31) | (exp << 23) | frac;
 }
-
 
 
 // P18
