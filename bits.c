@@ -435,66 +435,55 @@ unsigned floatScaleThreeHalves(unsigned uf) {
         return uf;
     }
 
+   
+    unsigned mant;
     if (exp == 0) {
-        unsigned sig3 = frac + (frac << 1); 
-        unsigned round_bit = sig3 & 1;
-        unsigned sig_half = sig3 >> 1;
-
-        if (round_bit && (sig_half & 1)) {
-            sig_half++;
-        }
-        unsigned sig_new = sig_half;
-
-        unsigned new_exp, new_frac;
-        if (sig_new >= (1 << 23)) {
-            new_exp = 1;
-            new_frac = sig_new - (1 << 23);
-        } else {
-            new_exp = 0;
-            new_frac = sig_new;
-        }
-        return (s << 31) | (new_exp << 23) | new_frac;
+        mant = frac << 1; 
     } else {
+        mant = (1 << 24) | (frac << 1);  
+
+  
+    mant = mant + (mant << 1);
+    unsigned new_exp;
+    if (mant & (1 << 26)) {
         
-        unsigned sig = ((1 << 23) | frac) << 1;
-        
-        unsigned sig3 = sig + (sig << 1);
-        unsigned sig_half = sig3 >> 1;
-
-        unsigned new_exp;
-        unsigned frac24; 
-        if (sig_half >= (1 << 25)) {
-           
-            new_exp = exp + 1;
-            frac24 = (sig_half >> 1) & ((1 << 24) - 1);
-        } else {
-           
-            new_exp = exp;
-            frac24 = sig_half & ((1 << 24) - 1);
-        }
-
-       
-        unsigned round_bit = frac24 & 1;
-        unsigned new_frac = frac24 >> 1;
-        if (round_bit && (new_frac & 1)) {
-            new_frac++;
-        }
-
-       
-        if (new_frac >= (1 << 23)) {
-            new_exp++;
-            new_frac = 0;
-        }
-
-      
-        if (new_exp >= 0xFF) {
-            return (s << 31) | (0xFF << 23);
-        }
-
-        return (s << 31) | (new_exp << 23) | new_frac;
+        new_exp = exp + 2;
+        mant >>= 1;  
+    } else {
+    
+        new_exp = exp + 1;
     }
-}
 
+    
+    unsigned round_bit = mant & 1;
+    unsigned lsb = (mant >> 1) & 1;
+    mant >>= 1;
+
+    if (round_bit && lsb) {
+        mant++;
+        if (mant & (1 << 24)) {
+            new_exp++;
+            mant >>= 1;
+        }
+    }
+    if (new_exp >= 0xFF) {
+        return (s << 31) | (0xFF << 23);
+    }
+
+    unsigned new_frac = mant & 0x7FFFFF;
+    if (new_exp <= 0) {
+  
+        unsigned shift = 1 - new_exp;
+        if (shift >= 24) {
+            new_frac = 0;
+        } else {
+            new_frac = mant >> shift;
+        }
+        new_exp = 0;
+    }
+
+    return (s << 31) | (new_exp << 23) | new_frac;
+}
 
 // P16
 /* 
