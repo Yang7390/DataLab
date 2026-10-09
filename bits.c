@@ -519,42 +519,56 @@ unsigned floatRoundEven(unsigned uf) {
     unsigned s = uf >> 31;
     unsigned exp = (uf >> 23) & 0xFF;
     unsigned frac = uf & 0x7FFFFF;
+
     if (exp == 0xFF) {
         return uf;
     }
 
     int e = exp - 127;
+
+  
     if (e >= 23) {
         return uf;
     }
-    if (e < 0) {
+
+   
+    if (e <= -2) {
         return s << 31;
     }
+
+    if (e == -1) {
+        if (frac != 0) {
+           
+            return (s << 31) | (127U << 23);
+        } else {
+          
+            return s << 31;
+        }
+    }
+
+ 
     unsigned shift = 23 - e;
     unsigned mask = (1U << shift) - 1;
     unsigned frac_fraction = frac & mask;
     unsigned round_bit = (frac_fraction >> (shift - 1)) & 1;
-    unsigned sticky_bit = frac_fraction & (~(1U << (shift - 1)));
+    unsigned sticky_bit = frac_fraction & ((1U << (shift - 1)) - 1);
     unsigned int_part_frac = frac & (~mask);
 
+    unsigned lsb = (e == 0) ? 1 : ((int_part_frac >> shift) & 1);
+
     if (round_bit) {
-        if (sticky_bit || ((int_part_frac >> shift) & 1)) {
+        if (sticky_bit || lsb) {
             int_part_frac += (1U << shift);
             if (int_part_frac & (1U << 23)) {
-                exp = exp + 1;
-                int_part_frac = int_part_frac & 0x7FFFFFU;
+                exp += 1;
+                int_part_frac &= 0x7FFFFFU;
             }
         }
     }
-
     frac = int_part_frac;
-    if (exp >= 0xFF) {
-        return (s << 31) | (0xFFU << 23);
-    }
-
     return (s << 31) | (exp << 23) | frac;
 }
-  
+    
 // P17
 /*
  * float_i2f - Return bit-level equivalent of expression (float) x.
