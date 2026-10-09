@@ -620,7 +620,16 @@ unsigned float_i2f(int x) {
  *   Rating: 10
  */
 int bitCount(int x) {
-  return 18;
+    int m1 = 0x55 | (0x55 << 8) | (0x55 << 16) | (0x55 << 24);
+    int m2 = 0x33 | (0x33 << 8) | (0x33 << 16) | (0x33 << 24);
+    int m4 = 0x0F | (0x0F << 8) | (0x0F << 16) | (0x0F << 24);
+    int m8 = 0x01 | (0x01 << 8) | (0x01 << 16) | (0x01 << 24);
+    x = (x & m1) + ((x >> 1) & m1);
+    x = (x & m2) + ((x >> 2) & m2);
+    x = (x & m4) + ((x >> 4) & m4);
+    x = (x & m8) + ((x >> 8) & m8);
+    x = x + (x >> 16)；
+    return x & 0x3F;
 }
 
 // P19
