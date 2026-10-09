@@ -431,60 +431,78 @@ unsigned floatScaleThreeHalves(unsigned uf) {
     unsigned s = uf >> 31;
     unsigned exp = (uf >> 23) & 0xFF;
     unsigned frac = uf & 0x7FFFFF;
+    unsigned M, M3;
+    unsigned new_exp, new_frac;
+    unsigned round_bit, sticky_bit, lsb;
+    unsigned new_M;
+
+   
     if (exp == 0xFF) {
         return uf;
     }
 
-   
-    unsigned mant;
     if (exp == 0) {
-        mant = frac << 1; 
-    } else {
-        mant = (1 << 24) | (frac << 1);  
-
-  
-    mant = mant + (mant << 1);
-    unsigned new_exp;
-    if (mant & (1 << 26)) {
         
-        new_exp = exp + 2;
-        mant >>= 1;  
-    } else {
-    
-        new_exp = exp + 1;
-    }
+        M = frac;
+        M3 = M + (M << 1);  
+        round_bit = M3 & 1;
+        new_M = M3 >> 1;
+        lsb = new_M & 1;
 
-    
-    unsigned round_bit = mant & 1;
-    unsigned lsb = (mant >> 1) & 1;
-    mant >>= 1;
-
-    if (round_bit && lsb) {
-        mant++;
-        if (mant & (1 << 24)) {
-            new_exp++;
-            mant >>= 1;
+        if (round_bit && lsb) {
+            new_M++;
         }
+
+      
+        if (new_M & (1 << 23)) {
+            new_exp = 1;
+            new_frac = new_M & 0x7FFFFF;
+        } else {
+            new_exp = 0;
+            new_frac = new_M;
+        }
+    } else {
+       
+        M = (1 << 23) | frac;  
+        M3 = M + (M << 1);     
+
+        if (M3 & (1 << 25)) {
+           
+            new_exp = exp + 1;
+            new_M = M3 >> 2;
+            round_bit = (M3 >> 1) & 1;
+            sticky_bit = M3 & 1;
+        } else {
+           
+            new_exp = exp;
+            new_M = M3 >> 1;
+            round_bit = M3 & 1;
+            sticky_bit = 0;
+        }
+
+        lsb = new_M & 1;
+
+     
+        if (round_bit && (sticky_bit || lsb)) {
+            new_M++;
+            
+            if (new_M & (1 << 24)) {
+                new_exp++;
+                new_M >>= 1;
+            }
+        }
+
+        new_frac = new_M & 0x7FFFFF;
     }
+
+   
     if (new_exp >= 0xFF) {
         return (s << 31) | (0xFF << 23);
     }
 
-    unsigned new_frac = mant & 0x7FFFFF;
-    if (new_exp <= 0) {
-  
-        unsigned shift = 1 - new_exp;
-        if (shift >= 24) {
-            new_frac = 0;
-        } else {
-            new_frac = mant >> shift;
-        }
-        new_exp = 0;
-    }
-
     return (s << 31) | (new_exp << 23) | new_frac;
 }
-
+    
 // P16
 /* 
  * floatRoundEven - round the floating-point value represented by uf to the
